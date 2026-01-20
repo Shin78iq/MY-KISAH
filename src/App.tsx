@@ -77,7 +77,7 @@ const BACKGROUND_FADE_START = Math.max(
 );
 
 const TYPED_LINES = [
-  "> ghin",
+  "> ghinoy:3",
   "erm...",
   "> i know today is your birthday",
   "...",
@@ -99,7 +99,7 @@ type BirthdayCardConfig = {
 const BIRTHDAY_CARDS: ReadonlyArray<BirthdayCardConfig> = [
   {
     id: "confetti",
-    image: "/idk.jpg",
+    image: "/Picturesyeahhh.png",
     position: [1, 0.081, -2],
     rotation: [-Math.PI / 2 , 0, Math.PI / 3],
   }
@@ -478,34 +478,53 @@ export default function App() {
     typingComplete,
     sceneStarted,
   ]);
-
-  useEffect(() => {
+    useEffect(() => {
     const handle = window.setInterval(() => {
       setCursorVisible((prev) => !prev);
     }, CURSOR_BLINK_INTERVAL);
     return () => window.clearInterval(handle);
   }, []);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.code !== "Space" && event.key !== " ") {
-        return;
-      }
-      event.preventDefault();
-      if (!hasStarted) {
-        playBackgroundMusic();
-        setHasStarted(true);
-        return;
-      }
-      if (hasAnimationCompleted && isCandleLit) {
-        setIsCandleLit(false);
-        setFireworksActive(true);
-      }
-    };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [hasStarted, hasAnimationCompleted, isCandleLit, playBackgroundMusic]);
+
+  useEffect(() => {
+  const startOrInteract = () => {
+    if (!hasStarted) {
+      playBackgroundMusic();
+      setHasStarted(true);
+      return;
+    }
+    if (hasAnimationCompleted && isCandleLit) {
+      setIsCandleLit(false);
+      setFireworksActive(true);
+    }
+  };
+
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.code !== "Space" && event.key !== " ") return;
+    event.preventDefault();
+    startOrInteract();
+  };
+
+  const handleClick = () => {
+    startOrInteract();
+  };
+
+  const handleTouch = () => {
+    startOrInteract();
+  };
+  window.addEventListener("keydown", handleKeyDown);
+  window.addEventListener("click", handleClick);
+  window.addEventListener("touchstart", handleTouch);
+
+  return () => {
+    window.removeEventListener("keydown", handleKeyDown);
+    window.removeEventListener("click", handleClick);
+    window.removeEventListener("touchstart", handleTouch);
+  };
+}, [hasStarted, hasAnimationCompleted, isCandleLit, playBackgroundMusic]);
+
+
 
   const handleCardToggle = useCallback((id: string) => {
     setActiveCardId((current) => (current === id ? null : id));
@@ -513,12 +532,12 @@ export default function App() {
 
   const isScenePlaying = hasStarted && sceneStarted;
 
-  return (
-    <div className="App">
-      <div
-        className="background-overlay"
-        style={{ opacity: backgroundOpacity }}
-      >
+ return (
+  <div className="App">
+    <div
+      className="background-overlay"
+      style={{ opacity: backgroundOpacity }}
+    >
         <div className="typed-text">
           {typedLines.map((line, index) => {
             const showCursor =
@@ -539,7 +558,7 @@ export default function App() {
         </div>
       </div>
       {hasAnimationCompleted && isCandleLit && (
-        <div className="hint-overlay">press space to blow out the candle</div>
+        <div className="hint-overlay">press space to blow out the candle or if you're on a mobile device, tap the screen :3</div>
       )}
       <Canvas
         gl={{ alpha: true }}
