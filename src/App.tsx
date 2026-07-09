@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Environment, OrbitControls } from "@react-three/drei";
+import { Environment, Html, OrbitControls } from "@react-three/drei";
 import {
   Suspense,
   useCallback,
@@ -366,6 +366,14 @@ function EnvironmentBackgroundController({
 }
 
 
+function CanvasLoadingFallback() {
+  return (
+    <Html center>
+      <div className="canvas-loading">loading… (^o^)/</div>
+    </Html>
+  );
+}
+
 export default function App() {
   const [hasStarted, setHasStarted] = useState(false);
   const [backgroundOpacity, setBackgroundOpacity] = useState(1);
@@ -380,21 +388,25 @@ export default function App() {
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const backgroundAudioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Audio is now created lazily on the user's first interaction instead of
+  // on mount. Before, the <Audio> object was created (and started
+  // downloading, thanks to preload="auto") the instant App mounted — before
+  // the user had even clicked "start". That meant the mp3 fought for
+  // bandwidth against the HDR/textures/models right at page load.
   useEffect(() => {
-    const audio = new Audio("/NAIF - Air dan Api (Lirik).mp3");
-    audio.loop = true;
-    audio.preload = "auto";
-    backgroundAudioRef.current = audio;
     return () => {
-      audio.pause();
+      backgroundAudioRef.current?.pause();
       backgroundAudioRef.current = null;
     };
   }, []);
 
   const playBackgroundMusic = useCallback(() => {
-    const audio = backgroundAudioRef.current;
+    let audio = backgroundAudioRef.current;
     if (!audio) {
-      return;
+      audio = new Audio("/NAIF - Air dan Api (Lirik).mp3");
+      audio.loop = true;
+      audio.preload = "auto";
+      backgroundAudioRef.current = audio;
     }
     if (!audio.paused) {
       return;
@@ -567,7 +579,7 @@ export default function App() {
           gl.setClearColor("#000000", 0);
         }}
       >
-        <Suspense fallback={null}>
+        <Suspense fallback={<CanvasLoadingFallback />}>
           <AnimatedScene
             isPlaying={isScenePlaying}
             candleLit={isCandleLit}
@@ -596,3 +608,4 @@ export default function App() {
     </div>
   );
 }
+
